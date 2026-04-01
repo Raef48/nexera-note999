@@ -19,7 +19,18 @@ export default function Dashboard() {
   const [isAINoteGeneratorOpen, setIsAINoteGeneratorOpen] = useState(false);
   const [isAISearchOpen, setIsAISearchOpen] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem('aura_user') || '{}');
+  // Safely parse user from localStorage
+  const getUser = () => {
+    try {
+      const rawUser = localStorage.getItem('aura_user');
+      return rawUser ? JSON.parse(rawUser) : {};
+    } catch (error) {
+      console.error('Error parsing user:', error);
+      return {};
+    }
+  };
+  
+  const user = getUser();
 
   useEffect(() => {
     const loadNotes = async () => {

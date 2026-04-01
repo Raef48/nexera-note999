@@ -6,12 +6,16 @@ const INSFORGE_ANON_KEY = import.meta.env.VITE_INSFORGE_ANON_KEY;
 // Vercel deployment: use relative paths or deployment URL
 // Development: use localhost Express server
 const getApiBaseUrl = () => {
-  // In production (Vercel), use relative paths
-  if (import.meta.env.PROD || !import.meta.env.VITE_BACKEND_URL) {
+  // Check if we're in production or if VITE_BACKEND_URL is localhost
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
+  const isLocalhost = backendUrl.includes('localhost');
+  
+  // In production (Vercel) or if backend URL is localhost, use relative paths
+  if (import.meta.env.PROD || isLocalhost || !backendUrl) {
     return '';  // Use relative paths like /api/v1/functions/...
   }
-  // In development, use local Express server
-  return import.meta.env.VITE_BACKEND_URL;
+  // In development with non-localhost backend, use the specified URL
+  return backendUrl;
 };
 
 const BACKEND_URL = getApiBaseUrl();

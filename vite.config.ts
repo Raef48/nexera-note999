@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
       'process.env.VITE_INSFORGE_URL': JSON.stringify(env.VITE_INSFORGE_URL),
       'process.env.VITE_INSFORGE_ANON_KEY': JSON.stringify(env.VITE_INSFORGE_ANON_KEY),
       'process.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL),
+      'process.env.VITE_BACKEND_URL': JSON.stringify(env.VITE_BACKEND_URL),
     },
     resolve: {
       alias: {

@@ -5,9 +5,20 @@ import Signup from './pages/Signup';
 import SharedNote from './pages/SharedNote';
 
 export default function App() {
-  const rawUser = localStorage.getItem('aura_user');
-  const user = rawUser ? JSON.parse(rawUser) : null;
-  const isAuthenticated = user && !user.id?.toString().startsWith('demo-');
+  // Safely parse user from localStorage with error handling
+  let user = null;
+  let isAuthenticated = false;
+  
+  try {
+    const rawUser = localStorage.getItem('aura_user');
+    if (rawUser) {
+      user = JSON.parse(rawUser);
+      isAuthenticated = user && !user.id?.toString().startsWith('demo-');
+    }
+  } catch (error) {
+    console.error('Error parsing user from localStorage:', error);
+    // If parsing fails, user remains null and isAuthenticated stays false
+  }
 
   return (
     <Routes>
