@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import SharedNote from './pages/SharedNote';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   // Safely parse user from localStorage with error handling
@@ -30,6 +31,7 @@ export default function App() {
         element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />} 
       />
       <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

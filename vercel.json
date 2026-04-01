@@ -8,6 +8,10 @@
     {
       "source": "/api/v1/functions/(.*)",
       "destination": "/api/v1/functions/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/dist/index.html"
     }
   ],
   "routes": [
