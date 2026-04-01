@@ -8,29 +8,18 @@
     {
       "source": "/api/v1/functions/(.*)",
       "destination": "/api/v1/functions/$1"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/v1/functions/(.*)",
-      "dest": "/api/v1/functions/$1"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "/$1"
+      "source": "/api/(.*)",
+      "destination": "/$1"
     },
     {
-      "src": "/assets/(.*)",
-      "dest": "/dist/assets/$1"
+      "source": "/assets/(.*)",
+      "destination": "/dist/assets/$1"
     },
     {
-      "check": true,
-      "src": "/(.*\\..*)",
-      "dest": "/dist/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/dist/index.html"
+      "source": "/(.*)",
+      "destination": "/dist/index.html"
     }
   ],
   "headers": [
