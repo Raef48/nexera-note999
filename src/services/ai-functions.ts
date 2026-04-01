@@ -2,7 +2,19 @@ import { Note } from '../services/db';
 
 const INSFORGE_URL = import.meta.env.VITE_INSFORGE_URL;
 const INSFORGE_ANON_KEY = import.meta.env.VITE_INSFORGE_ANON_KEY;
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+
+// Vercel deployment: use relative paths or deployment URL
+// Development: use localhost Express server
+const getApiBaseUrl = () => {
+  // In production (Vercel), use relative paths
+  if (import.meta.env.PROD || !import.meta.env.VITE_BACKEND_URL) {
+    return '';  // Use relative paths like /api/v1/functions/...
+  }
+  // In development, use local Express server
+  return import.meta.env.VITE_BACKEND_URL;
+};
+
+const BACKEND_URL = getApiBaseUrl();
 
 export interface GeneratedNote {
   title: string;

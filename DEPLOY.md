@@ -70,6 +70,28 @@ The `edge-functions/` directory contains serverless functions that run on Vercel
 - Restart the deployment after adding new environment variables
 - Use `vercel env pull` to sync environment variables locally
 
+### Login/Authentication 404 Errors
+If you're getting 404 errors when trying to login, the InsForge environment variables are likely not set on Vercel.
+
+**To fix this:**
+
+1. Go to your Vercel Dashboard: https://vercel.com/dashboard
+2. Select your project (nexera-note)
+3. Click on **Settings** tab
+4. In the left sidebar, click **Environment Variables**
+5. Add the following variables:
+
+| Name | Value |
+|------|-------|
+| `VITE_INSFORGE_URL` | Your InsForge project URL (e.g., `https://your-project.insforge.app`) |
+| `VITE_INSFORGE_ANON_KEY` | Your InsForge anonymous key |
+
+6. Click **Save**
+7. Go to **Deployments** tab
+8. Click **Redeploy** on your latest deployment (or push a new commit to trigger automatic redeploy)
+
+After redeployment, the login should work with your existing account.
+
 ### Routing Issues
 - The `vercel.json` file handles SPA routing
 - All routes are redirected to `index.html` for client-side routing
