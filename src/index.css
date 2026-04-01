@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Outfit", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-zinc-950 text-zinc-100;
+  }
+}
+
+.prose-custom {
+  @apply text-zinc-300 leading-relaxed;
+}
+
+.prose-custom h1 {
+  @apply text-zinc-100 font-bold mt-8 mb-4 border-b border-zinc-800 pb-4;
+}
+
+.prose-custom h2 {
+  @apply text-zinc-100 font-bold mt-6 mb-3 border-b border-zinc-900 pb-2;
+}
+
+.prose-custom h3 {
+  @apply text-zinc-200 font-semibold mt-4 mb-2;
+}
+
+.prose-custom p {
+  @apply mb-4 leading-[1.8];
+}
+
+.prose-custom ul {
+  @apply list-disc pl-5 mb-4 space-y-1;
+}
+
+.prose-custom ol {
+  @apply list-decimal pl-5 mb-4 space-y-1;
+}
+
+.prose-custom blockquote {
+  @apply border-l-4 border-orange-500/50 pl-4 py-1 my-4 bg-orange-500/5 rounded-r-lg text-zinc-400 italic;
+}
+
+.prose-custom code:not(pre code) {
+  @apply bg-zinc-800/80 px-1.5 py-0.5 rounded text-orange-400 text-sm font-mono;
+}
+
+.prose-custom pre {
+  @apply bg-zinc-900 border border-zinc-800 rounded-xl p-4 my-6 overflow-x-auto;
+}
+
+.prose-custom pre code {
+  @apply bg-transparent p-0 text-orange-200/80;
+}
+
+.prose-custom table {
+  @apply w-full border-collapse my-6 rounded-xl overflow-hidden border border-zinc-800;
+}
+
+.prose-custom th {
+  @apply bg-zinc-900 text-left px-4 py-2 border-b border-zinc-800 font-bold text-zinc-400 text-xs uppercase tracking-wider;
+}
+
+.prose-custom td {
+  @apply px-4 py-2 border-b border-zinc-900 text-zinc-300;
+}
+
+.prose-custom img {
+  @apply rounded-xl border border-zinc-800 my-6 max-w-full shadow-2xl;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-zinc-800 rounded-full hover:bg-zinc-700 transition-colors;
+}
+
+/* Form Styles */
+input::placeholder, textarea::placeholder {
+  @apply text-zinc-700 transition-opacity;
+}
+
+input:focus::placeholder, textarea:focus::placeholder {
+  @apply opacity-0;
+}
+
+/* Transitions */
+.transition-dashboard {
+  @apply transition-all duration-300 ease-in-out;
+}

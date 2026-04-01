@@ -1,0 +1,6 @@
+﻿
+> react-example@0.0.0 lint
+> tsc --noEmit
+
+src/services/insforge.ts(3,33): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/services/insforge.ts(4,37): error TS2339: Property 'env' does not exist on type 'ImportMeta'.

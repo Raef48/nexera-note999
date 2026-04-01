@@ -1,0 +1,5 @@
+ALTER TABLE public.notes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
+
+DROP FUNCTION IF EXISTS public.upsert_note;
+DROP FUNCTION IF EXISTS public.upsert_profile;
