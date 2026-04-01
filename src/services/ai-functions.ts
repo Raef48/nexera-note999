@@ -1,9 +1,4 @@
-import { Note } from '../services/db';
-
-const INSFORGE_URL = import.meta.env.VITE_INSFORGE_URL;
-const INSFORGE_ANON_KEY = import.meta.env.VITE_INSFORGE_ANON_KEY;
-
-// Vercel deployment: use relative paths or deployment URL
+// Vercel deployment: use relative paths
 // Development: use localhost Express server
 const getApiBaseUrl = () => {
   // Check if we're in production or if VITE_BACKEND_URL is localhost
@@ -37,6 +32,7 @@ export interface SearchResults {
     updated_at: string;
   }>;
   totalResults: number;
+  message?: string;
   ragAnswer?: string;
   sources?: Array<{
     noteId: string;
