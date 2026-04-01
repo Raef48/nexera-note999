@@ -71,10 +71,15 @@ export default function SharedNote() {
       const a = document.createElement('a');
       a.href = url;
       a.download = `${note.title || 'Untitled'}.pdf`;
+      a.style.display = 'none';
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      setTimeout(() => {
+        if (a.parentNode) {
+          document.body.removeChild(a);
+        }
+        window.URL.revokeObjectURL(url);
+      }, 100);
     } catch (err) {
       console.error('PDF export failed:', err);
     }
