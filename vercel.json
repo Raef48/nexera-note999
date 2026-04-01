@@ -2,6 +2,18 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/assets/:match*",
+      "destination": "/assets/:match*"
+    },
+    {
+      "source": "/api/:match*",
+      "destination": "/api/:match*"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/favicon.ico"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
