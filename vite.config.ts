@@ -29,6 +29,7 @@ export default defineConfig(({ mode }) => {
       assetsDir: 'assets',
       sourcemap: false,
       minify: 'esbuild',
+      chunkSizeWarningLimit: 1000, // Suppress size warning
     },
   };
 });
