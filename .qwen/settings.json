@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(raw.githubusercontent.com)",
+      "Bash(npm install *)",
+      "Bash(qwen *)",
+      "Bash(npx *)",
+      "Bash(acpx *)",
+      "Bash(npm run *)",
+      "Bash(findstr *)"
+    ]
+  },
+  "$version": 3
+}

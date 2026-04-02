@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Sparkles, X, FileText, Loader2 } from 'lucide-react';
-import { generateNote, trackUsage } from '../services/ai-functions';
+import { Sparkles, X, FileText, Loader2, AlertTriangle } from 'lucide-react';
+import { generateNote } from '../services/ai-functions';
+import { checkUsageLimit } from '../services/usage-limits';
 
 interface AINoteGeneratorProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export default function AINoteGenerator({ isOpen, onClose, onNoteGenerated, user
   const [style, setStyle] = useState<NoteStyle>('default');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
+  const [usageError, setUsageError] = useState<{ message: string; resetTime: string } | null>(null);
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
@@ -30,16 +32,27 @@ export default function AINoteGenerator({ isOpen, onClose, onNoteGenerated, user
       return;
     }
 
+    // Check usage limits before generating
+    const usageCheck = await checkUsageLimit(userId);
+    if (!usageCheck.canProceed) {
+      setUsageError({
+        message: usageCheck.message || 'Usage limit exceeded',
+        resetTime: usageCheck.usage?.reset_daily_at || '',
+      });
+      return;
+    }
+
     setIsGenerating(true);
     setError('');
+    setUsageError(null);
 
     try {
       const note = await generateNote(topic, style, userId);
       onNoteGenerated(note.title, note.content);
-      
+
       // Notify usage update
-      window.dispatchEvent(new CustomEvent('aura_usage_update'));
-      
+      window.dispatchEvent(new CustomEvent('nexera_usage_update'));
+
       onClose();
       setTopic('');
       setStyle('default');
@@ -83,6 +96,29 @@ export default function AINoteGenerator({ isOpen, onClose, onNoteGenerated, user
 
         {/* Content */}
         <div className="p-6 space-y-6">
+          {/* Usage Limit Warning */}
+          {usageError && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle size={18} className="text-red-400 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-red-400 mb-1">{usageError.message}</p>
+                  {usageError.resetTime && (
+                    <p className="text-xs text-red-300/80">
+                      Resets at {new Date(usageError.resetTime).toLocaleTimeString()}
+                    </p>
+                  )}
+                  <button
+                    onClick={() => setUsageError(null)}
+                    className="mt-2 text-xs text-red-400 hover:text-red-300 underline"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Topic Input */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-zinc-300">

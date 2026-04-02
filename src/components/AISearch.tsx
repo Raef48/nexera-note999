@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Search, X, Sparkles, FileText, Loader2, MessageSquare } from 'lucide-react';
+import { Search, X, Sparkles, FileText, Loader2, MessageSquare, AlertTriangle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { searchNotes, trackUsage } from '../services/ai-functions';
+import { searchNotes } from '../services/ai-functions';
+import { checkUsageLimit } from '../services/usage-limits';
 
 interface AISearchProps {
   isOpen: boolean;
@@ -27,19 +28,31 @@ export default function AISearch({ isOpen, onClose, userId, onNoteSelect }: AISe
     sources?: Array<{ noteId: string; title: string; excerpt: string }>;
   } | null>(null);
   const [searchMode, setSearchMode] = useState<'search' | 'rag' | 'both'>('both');
+  const [usageError, setUsageError] = useState<{ message: string; resetTime: string } | null>(null);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
 
+    // Check usage limits before searching
+    const usageCheck = await checkUsageLimit(userId);
+    if (!usageCheck.canProceed) {
+      setUsageError({
+        message: usageCheck.message || 'Usage limit exceeded',
+        resetTime: usageCheck.usage?.reset_daily_at || '',
+      });
+      return;
+    }
+
     setIsSearching(true);
     setResults(null);
+    setUsageError(null);
 
     try {
       const data = await searchNotes(query, userId, searchMode, 10);
       setResults(data);
-      
+
       // Notify usage update
-      window.dispatchEvent(new CustomEvent('aura_usage_update'));
+      window.dispatchEvent(new CustomEvent('nexera_usage_update'));
     } catch (error: any) {
       console.error('Search error:', error);
       alert('Search failed: ' + error.message);
@@ -80,7 +93,30 @@ export default function AISearch({ isOpen, onClose, userId, onNoteSelect }: AISe
         </div>
 
         {/* Search Input */}
-        <div className="px-6 py-4 border-b border-zinc-800 flex-shrink-0">
+        <div className="px-6 py-4 border-b border-zinc-800 flex-shrink-0 space-y-3">
+          {/* Usage Limit Warning */}
+          {usageError && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+              <div className="flex items-start gap-3">
+                <AlertTriangle size={16} className="text-red-400 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-red-400 mb-1">{usageError.message}</p>
+                  {usageError.resetTime && (
+                    <p className="text-xs text-red-300/80">
+                      Resets at {new Date(usageError.resetTime).toLocaleTimeString()}
+                    </p>
+                  )}
+                  <button
+                    onClick={() => setUsageError(null)}
+                    className="mt-1 text-xs text-red-400 hover:text-red-300 underline"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <div className="flex-1 relative">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
@@ -197,7 +233,7 @@ export default function AISearch({ isOpen, onClose, userId, onNoteSelect }: AISe
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-zinc-300 flex items-center gap-2">
                       <FileText size={16} className="text-zinc-500" />
-                      Search Results ({results.totalResults})
+                      Search Results ({results.results.length})
                     </h3>
                   </div>
                   <div className="space-y-3">

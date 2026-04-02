@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, StickyNote, X, ChevronDown, Menu } from 'lucide-react';
+import { Send, Bot, User, StickyNote, X, ChevronDown, Menu, AlertTriangle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { ChatMessage, db, Note, Profile } from '../services/db';
 import { generateAIResponse } from '../services/ai';
+import { checkUsageLimit, incrementUsage } from '../services/usage-limits';
 
 interface ChatBoxProps {
   context: string;
@@ -16,9 +17,10 @@ export default function ChatBox({ context, notes, activeNote, onToggleSidebar }:
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [focusedNote, setFocusedNote] = useState<Note | null>(activeNote || null);
-  const [chatMode, setChatMode] = useState<'notes' | 'general'>('notes'); // 'notes' = note-focused, 'general' = Nexera AI general chat
+  const [chatMode, setChatMode] = useState<'notes' | 'general'>('notes');
   const [showNoteSelector, setShowNoteSelector] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [usageError, setUsageError] = useState<{ message: string; resetTime: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -107,6 +109,16 @@ Help the user with questions about any of their notes. You can compare notes, fi
     const user = JSON.parse(localStorage.getItem('aura_user') || '{}');
     if (!user.id) return;
 
+    // Check usage limits before sending
+    const usageCheck = await checkUsageLimit(user.id);
+    if (!usageCheck.canProceed) {
+      setUsageError({
+        message: usageCheck.message || 'Usage limit exceeded',
+        resetTime: usageCheck.usage?.reset_daily_at || '',
+      });
+      return;
+    }
+
     try {
       const chats = await db.getChats(user.id);
       const activeChat = chats[0];
@@ -119,12 +131,19 @@ Help the user with questions about any of their notes. You can compare notes, fi
 
       const aiContext = buildContext();
       const aiResponse = await generateAIResponse(input, aiContext);
+      
+      // Track usage after successful AI response
+      await incrementUsage(user.id, 'ai_query');
+      
       const assistantMessage = await db.saveMessage(
         activeChat.id,
         'assistant',
         aiResponse || 'Sorry, I could not generate a response.'
       );
       setMessages(prev => [...prev, assistantMessage]);
+      
+      // Dispatch usage update event
+      window.dispatchEvent(new CustomEvent('nexera_usage_update'));
     } catch (error) {
       console.error('Chat error:', error);
     } finally {
@@ -263,6 +282,29 @@ Help the user with questions about any of their notes. You can compare notes, fi
           )}
         </div>
       </div>
+
+      {/* Usage Limit Warning */}
+      {usageError && (
+        <div className="mx-5 mt-3 bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+          <div className="flex items-start gap-3">
+            <AlertTriangle size={16} className="text-red-400 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-red-400 mb-1">{usageError.message}</p>
+              {usageError.resetTime && (
+                <p className="text-xs text-red-300/80">
+                  Resets at {new Date(usageError.resetTime).toLocaleTimeString()}
+                </p>
+              )}
+              <button
+                onClick={() => setUsageError(null)}
+                className="mt-1 text-xs text-red-400 hover:text-red-300 underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Focus indicator */}
       {chatMode === 'general' && (

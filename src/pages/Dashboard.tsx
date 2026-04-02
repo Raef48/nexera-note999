@@ -6,6 +6,7 @@ import AINoteGenerator from '../components/AINoteGenerator';
 import AISearch from '../components/AISearch';
 import { db, Note } from '../services/db';
 import { trackUsage } from '../services/ai-functions';
+import { checkUsageLimit } from '../services/usage-limits';
 
 export default function Dashboard() {
   const [notes, setNotes] = useState<Note[]>([]);

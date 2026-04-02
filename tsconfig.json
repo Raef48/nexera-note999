@@ -23,5 +23,7 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "include": ["src/**/*", "api/**/*", "server/**/*"],
+  "exclude": ["node_modules", "dist", "edge-functions", "tmp", "supabase", "database"]
 }

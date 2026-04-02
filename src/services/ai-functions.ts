@@ -1,19 +1,18 @@
 // Vercel deployment: use relative paths
 // Development: use localhost Express server
 const getApiBaseUrl = () => {
-  // Check if we're in production or if VITE_BACKEND_URL is localhost
   const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
   const isLocalhost = backendUrl.includes('localhost');
-  
-  // In production (Vercel) or if backend URL is localhost, use relative paths
+
   if (import.meta.env.PROD || isLocalhost || !backendUrl) {
-    return '';  // Use relative paths like /api/v1/functions/...
+    return '';
   }
-  // In development with non-localhost backend, use the specified URL
   return backendUrl;
 };
 
 const BACKEND_URL = getApiBaseUrl();
+
+import { incrementUsage, type UsageInfo } from './usage-limits';
 
 export interface GeneratedNote {
   title: string;
@@ -42,19 +41,8 @@ export interface SearchResults {
   usage?: UsageInfo;
 }
 
-export interface UsageInfo {
-  daily_limit: number;
-  monthly_limit: number;
-  current_daily_usage: number;
-  current_monthly_usage: number;
-  remaining_daily: number;
-  remaining_monthly: number;
-  reset_daily_at: string;
-  reset_monthly_at: string;
-}
-
 /**
- * Generate a note using AI
+ * Generate a note using AI with usage limit check
  */
 export async function generateNote(topic: string, style: string = 'default', userId: string): Promise<GeneratedNote> {
   try {
@@ -76,22 +64,26 @@ export async function generateNote(topic: string, style: string = 'default', use
     }
 
     const data = await response.json();
+
+    // Track usage after successful generation
+    await incrementUsage(userId, 'ai_query');
+
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('AI Note Generator error:', error);
     throw error;
   }
 }
 
 /**
- * Search notes with AI-powered RAG
+ * Search notes with AI-powered RAG with usage limit check
  */
 export async function searchNotes(query: string, userId: string, mode: 'search' | 'rag' | 'both' = 'both', limit: number = 10): Promise<SearchResults> {
   try {
     const response = await fetch(`${BACKEND_URL}/api/v1/functions/ai-search`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json', 
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         query,
@@ -107,8 +99,12 @@ export async function searchNotes(query: string, userId: string, mode: 'search' 
     }
 
     const data = await response.json();
+
+    // Track usage after successful search
+    await incrementUsage(userId, 'ai_query');
+
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('AI Search error:', error);
     throw error;
   }
@@ -141,8 +137,13 @@ export async function trackUsage(
       throw new Error(data.message || 'Failed to track usage');
     }
 
+    // Also track in usage_limits table for AI queries
+    if (eventType === 'ai_query') {
+      await incrementUsage(userId, 'ai_query');
+    }
+
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Analytics tracking error:', error);
     throw error;
   }
@@ -153,8 +154,8 @@ export async function trackUsage(
  */
 export async function checkUsage(userId: string): Promise<UsageInfo | null> {
   try {
-    const result = await trackUsage('message_sent', userId, { checkOnly: true });
-    return result.usage || null;
+    const { getCurrentUsage } = await import('./usage-limits');
+    return await getCurrentUsage(userId);
   } catch (error) {
     console.error('Failed to check usage:', error);
     return null;

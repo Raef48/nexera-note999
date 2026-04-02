@@ -2,7 +2,7 @@ import React from 'react';
 import { Plus, StickyNote, MessageSquare, Trash2, LogOut, Search, User, Camera, Loader2, Sparkles, Wand2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { db, Note, Profile } from '../services/db';
-import { checkUsage, UsageInfo } from '../services/ai-functions';
+import { getCurrentUsage, type UsageInfo } from '../services/usage-limits';
 
 interface SidebarProps {
   notes: Note[];
@@ -42,7 +42,7 @@ export default function Sidebar({
     const fetchProfileAndUsage = async () => {
       if (user?.id) {
         db.getProfile(user.id).then(setProfile);
-        checkUsage(user.id).then(setUsage);
+        getCurrentUsage(user.id).then(setUsage);
       }
     };
 
@@ -50,12 +50,12 @@ export default function Sidebar({
 
     const handleUsageUpdate = () => {
       if (user?.id) {
-        checkUsage(user.id).then(setUsage);
+        getCurrentUsage(user.id).then(setUsage);
       }
     };
 
-    window.addEventListener('aura_usage_update', handleUsageUpdate);
-    return () => window.removeEventListener('aura_usage_update', handleUsageUpdate);
+    window.addEventListener('nexera_usage_update', handleUsageUpdate);
+    return () => window.removeEventListener('nexera_usage_update', handleUsageUpdate);
   }, [user?.id]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -278,19 +278,32 @@ export default function Sidebar({
         {usage && (
           <div className="px-1 space-y-2">
             <div className="flex items-center justify-between text-[10px] uppercase tracking-wider font-bold">
-              <span className="text-zinc-500">AI Usage</span>
-              <span className={usage.remaining_daily < 5 ? 'text-orange-400' : 'text-zinc-400'}>
+              <span className="text-zinc-500">AI Queries</span>
+              <span className={
+                usage.remaining_daily < 5 
+                  ? 'text-orange-400' 
+                  : usage.remaining_daily === 0 
+                    ? 'text-red-400'
+                    : 'text-zinc-400'
+              }>
                 {usage.current_daily_usage} / {usage.daily_limit}
               </span>
             </div>
             <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
-              <div 
+              <div
                 className={`h-full transition-all duration-500 ${
-                  usage.remaining_daily < 5 ? 'bg-orange-500' : 'bg-orange-500/40'
+                  usage.remaining_daily < 5 
+                    ? 'bg-orange-500' 
+                    : usage.remaining_daily === 0
+                      ? 'bg-red-500'
+                      : 'bg-green-500'
                 }`}
-                style={{ width: `${Math.min(100, (usage.current_daily_usage / usage.daily_limit) * 100)}%` }}
+                style={{ width: `${Math.min(100, usage.usage_percentage_daily)}%` }}
               />
             </div>
+            <p className="text-[9px] text-zinc-600 text-right">
+              Resets {new Date(usage.reset_daily_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </p>
           </div>
         )}
 
