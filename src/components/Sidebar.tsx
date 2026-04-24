@@ -3,6 +3,8 @@ import { Plus, StickyNote, MessageSquare, Trash2, LogOut, Search, User, Camera, 
 import { useNavigate } from 'react-router-dom';
 import { db, Note, Profile } from '../services/db';
 import { getCurrentUsage, type UsageInfo } from '../services/usage-limits';
+import { clearStoredUser, getStoredUser } from '../services/auth';
+import { insforge } from '../services/insforge';
 
 interface SidebarProps {
   notes: Note[];
@@ -36,7 +38,7 @@ export default function Sidebar({
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const user = JSON.parse(localStorage.getItem('aura_user') || '{}');
+  const user = getStoredUser() || {};
 
   React.useEffect(() => {
     const fetchProfileAndUsage = async () => {
@@ -93,9 +95,10 @@ export default function Sidebar({
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('aura_user');
-    navigate('/login');
+  const handleLogout = async () => {
+    await insforge.auth.signOut().catch(() => {});
+    clearStoredUser();
+    navigate('/login', { replace: true });
   };
 
   const filteredNotes = notes.filter(note => {

@@ -1,29 +1,25 @@
+import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import SharedNote from './pages/SharedNote';
+import { getStoredUser, isStoredUserAuthenticated, subscribeToAuthChanges } from './services/auth';
 
 export default function App() {
-  // Safely parse user from localStorage with error handling
-  let user = null;
-  let isAuthenticated = false;
-  
-  try {
-    const rawUser = localStorage.getItem('aura_user');
-    if (rawUser) {
-      user = JSON.parse(rawUser);
-      isAuthenticated = user && !user.id?.toString().startsWith('demo-');
-    }
-  } catch (error) {
-    console.error('Error parsing user from localStorage:', error);
-    // If parsing fails, user remains null and isAuthenticated stays false
-  }
+  const [storedUser, setStoredUser] = useState(() => getStoredUser());
+  const isAuthenticated = isStoredUserAuthenticated(storedUser);
+
+  useEffect(() => {
+    return subscribeToAuthChanges(() => {
+      setStoredUser(getStoredUser());
+    });
+  }, []);
 
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
+      <Route path="/signup" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Signup />} />
       <Route path="/n/:slug" element={<SharedNote />} />
       <Route 
         path="/dashboard" 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, User, Lock, Mail } from 'lucide-react';
 import { insforge } from '../services/insforge';
+import { setStoredUser } from '../services/auth';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -41,8 +42,8 @@ export default function Signup() {
 
       // 3. Store user and navigate
       const userData = newProfile || { id: authData.user.id, email, full_name: fullName };
-      localStorage.setItem('aura_user', JSON.stringify(userData));
-      navigate('/dashboard');
+      setStoredUser(userData);
+      navigate('/dashboard', { replace: true });
     } catch (error: any) {
       const message = error.message || 'Unknown error';
       alert(`Signup Failed: ${message}\n\nTip: Ensure VITE_INSFORGE_URL and VITE_INSFORGE_ANON_KEY are set correctly.`);
