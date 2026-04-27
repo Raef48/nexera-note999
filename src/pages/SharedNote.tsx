@@ -9,6 +9,7 @@ import { Copy, Check, Download } from 'lucide-react';
 import * as PDF from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { db, Note } from '../services/db';
+import { fetchPublicNoteBySlug } from '../services/public-notes';
 
 const pdfStyles = PDF.StyleSheet.create({
   page: { padding: 60, backgroundColor: '#ffffff', fontFamily: 'Helvetica' },
@@ -32,8 +33,14 @@ export default function SharedNote() {
   useEffect(() => {
     const fetchNote = async () => {
       if (slug) {
-        const data = await db.getNoteBySlug(slug);
-        setNote(data);
+        try {
+          const data = await fetchPublicNoteBySlug(slug);
+          setNote(data);
+        } catch (error) {
+          console.warn('Public note endpoint failed, falling back to direct note lookup:', error);
+          const fallbackData = await db.getNoteBySlug(slug);
+          setNote(fallbackData);
+        }
       }
       setLoading(false);
     };

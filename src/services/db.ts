@@ -61,7 +61,6 @@ export const db = {
       const base = title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
       return base ? `${base}-${Math.random().toString(36).substring(2, 7)}` : Math.random().toString(36).substring(2, 12);
     };
-
     const noteToSave = {
       ...note,
       id: note.id || uuidv4(),
@@ -83,20 +82,44 @@ export const db = {
         })
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     } catch (err) {
-      console.warn('Backend save failed, using local storage:', err);
-      const localNotes = getLocal(`aura_notes_${note.user_id}`);
-      const index = localNotes.findIndex((n: any) => n.id === noteToSave.id);
-      if (index >= 0) {
-        localNotes[index] = noteToSave;
-      } else {
-        localNotes.unshift(noteToSave);
+      console.warn('RPC save failed, trying direct table write:', err);
+
+      try {
+        const isExistingNote = Boolean(note.id);
+        const query = isExistingNote
+          ? insforge
+              .database.from('notes')
+              .update({
+                title: noteToSave.title,
+                content: noteToSave.content,
+                slug: noteToSave.slug,
+                updated_at: noteToSave.updated_at,
+              })
+              .eq('id', noteToSave.id)
+              .eq('user_id', noteToSave.user_id)
+          : insforge
+              .database.from('notes')
+              .insert([noteToSave]);
+
+        const { data, error } = await query.select().single();
+        if (error) throw error;
+        return data;
+      } catch (fallbackError) {
+        console.warn('Backend save failed, using local storage:', fallbackError);
+        const localNotes = getLocal(`aura_notes_${note.user_id}`);
+        const index = localNotes.findIndex((n: any) => n.id === noteToSave.id);
+        if (index >= 0) {
+          localNotes[index] = noteToSave;
+        } else {
+          localNotes.unshift(noteToSave);
+        }
+        setLocal(`aura_notes_${note.user_id}`, localNotes);
+        return noteToSave as Note;
       }
-      setLocal(`aura_notes_${note.user_id}`, localNotes);
-      return noteToSave as Note;
     }
   },
 
